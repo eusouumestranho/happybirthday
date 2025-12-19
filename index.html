@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Happy Birthday</title>
+
+<style>
+:root{
+  --bg:#ffc9d9;
+  --accent:#ff7ea6;
+  --card-bg:#ffffff;
+  --text:#2b0b20;
+}
+
+html,body{
+  height:100%;
+  margin:0;
+}
+
+body{
+  background:var(--bg);
+  font-family:Arial,sans-serif;
+  color:var(--text);
+}
+
+.app{
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:16px;
+  box-sizing:border-box;
+}
+
+.card-frame{
+  width:100%;
+  max-width:420px;
+  background:rgba(255,255,255,.06);
+  border-radius:14px;
+  padding:16px;
+  box-sizing:border-box;
+  text-align:center;
+}
+
+h2{
+  margin:6px 0 14px;
+  font-size:20px;
+  color:#8a0d3a;
+}
+
+/* login */
+#login{display:block}
+
+#login input{
+  padding:12px;
+  font-size:18px;
+  width:200px;
+  border-radius:8px;
+  border:none;
+  text-align:center;
+}
+
+#login button{
+  margin-top:12px;
+  padding:10px 18px;
+  border-radius:8px;
+  border:none;
+  background:var(--accent);
+  color:#fff;
+  font-weight:700;
+  cursor:pointer;
+}
+
+/* memória */
+#memory{display:none}
+
+.memory-container{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:8px;
+  width:100%;
+  box-sizing:border-box;
+}
+
+.card{
+  background:var(--card-bg);
+  border-radius:8px;
+  width:100%;
+  aspect-ratio:3/4;
+  overflow:hidden;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+}
+
+.card img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  opacity:0;
+  transition:.25s;
+  pointer-events:none;
+}
+
+.card.revealed img{opacity:1}
+.card.matched{pointer-events:none}
+
+/* final */
+#final{
+  display:none;
+  text-align:left;
+  font-size:16px;
+  line-height:1.5;
+  color:#6f0c34;
+}
+
+#final .titulo{
+  text-align:center;
+  font-size:22px;
+  font-weight:700;
+  margin-bottom:12px;
+}
+
+#final .msg{
+  background:#fff;
+  padding:14px;
+  border-radius:10px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="app">
+  <div class="card-frame">
+
+    <div id="login">
+      <h2>Digite a data</h2>
+      <input id="data" placeholder="dd/mm/aaaa" inputmode="numeric" maxlength="10">
+      <br>
+      <button onclick="verificar()">OK</button>
+    </div>
+
+    <div id="memory">
+      <h2>Teste sua memória</h2>
+      <div class="memory-container" id="memoryGrid"></div>
+    </div>
+
+    <div id="final">
+      <div class="titulo">Feliz aniversário</div>
+      <div class="msg">
+        Se chegou aqui, já sabe quem eu sou.<br><br>
+        Bem, o que dizer né?<br>
+        Sinto sua falta. Espero que esteja bem.<br><br>
+        Já tinha planejado isso há tempos, mas né,
+        algumas coisas mudaram.<br><br>
+        Espero que tenha gostado e que tenha chegado até aqui.
+        Mesmo sendo algo simples, foi de coração.<br><br>
+        Aproveita seu dia.
+        Espero que seu gatinho esteja bem
+        e que esteja dando banho nele direitinho.<br><br>
+        Feliz aniversário, Mari.
+        Se cuida.<br><br>
+        Planejava falar tantas coisas.
+        Aconteceram coisas boas e ruins.
+        Fica pra uma próxima…
+        se tiver.
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const input=document.getElementById('data')
+
+input.addEventListener('input',()=>{
+  let v=input.value.replace(/\D/g,'')
+  if(v.length>8)v=v.slice(0,8)
+  if(v.length>4)v=v.replace(/(\d{2})(\d{2})(\d{1,4})/,'$1/$2/$3')
+  else if(v.length>2)v=v.replace(/(\d{2})(\d{1,2})/,'$1/$2')
+  input.value=v
+})
+
+function verificar(){
+  if(input.value==='21/12/2021'){
+    document.getElementById('login').style.display='none'
+    document.getElementById('memory').style.display='block'
+    startMemory()
+  }else{
+    alert('Errada')
+  }
+}
+
+const pares=[
+ ['gato1_a.png','gato1_b.png'],
+ ['gato2_a.png','gato2_b.png'],
+ ['daryl_a.png','daryl_b.png'],
+ ['maiara_a.png','maiara_b.png'],
+ ['mari_a.png','mari_b.png'],
+ ['olho_a.png','olho_b.png']
+]
+
+let imagens=[]
+pares.forEach(p=>{
+  const key=p[0].split('_')[0]
+  p.forEach(img=>imagens.push({src:img,par:key}))
+})
+
+function shuffle(a){
+  for(let i=a.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1))
+    ;[a[i],a[j]]=[a[j],a[i]]
+  }
+  return a
+}
+
+let opened=[]
+let lock=false
+let hits=0
+const grid=document.getElementById('memoryGrid')
+
+function startMemory(){
+  grid.innerHTML=''
+  opened=[]
+  lock=false
+  hits=0
+
+  shuffle(imagens.slice()).forEach(obj=>{
+    const card=document.createElement('div')
+    card.className='card'
+
+    const img=document.createElement('img')
+    img.src=obj.src
+    img.dataset.par=obj.par
+    img.dataset.matched='false'
+
+    card.appendChild(img)
+    card.onclick=()=>clickCard(card,img)
+    grid.appendChild(card)
+  })
+}
+
+function clickCard(card,img){
+  if(lock||img.dataset.matched==='true'||card.classList.contains('revealed'))return
+
+  card.classList.add('revealed')
+  opened.push({card,img})
+
+  if(opened.length===2){
+    lock=true
+    setTimeout(()=>{
+      const[a,b]=opened
+      if(a.img.dataset.par===b.img.dataset.par){
+        a.img.dataset.matched='true'
+        b.img.dataset.matched='true'
+        hits++
+        if(hits===pares.length){
+          document.getElementById('memory').style.display='none'
+          document.getElementById('final').style.display='block'
+        }
+      }else{
+        a.card.classList.remove('revealed')
+        b.card.classList.remove('revealed')
+      }
+      opened=[]
+      lock=false
+    },600)
+  }
+}
+</script>
+
+</body>
+</html>
